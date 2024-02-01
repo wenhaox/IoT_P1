@@ -1,4 +1,4 @@
-from ..post_api import *
+from post_api import *
 
 
 wio_post_to_led(1)

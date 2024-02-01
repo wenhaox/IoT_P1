@@ -1,4 +1,4 @@
-from ..post_api import *
+from post_api import *
 
 for f in range(500,2500,200):
     print(f"freq: {f}")
