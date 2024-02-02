@@ -7,30 +7,42 @@ https://console.cloud.google.com/apis/credentials?authuser=2&project=iotwio
 """
 
 import datetime
+import pickle
+
 import base64
 from email.mime.text import MIMEText
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
+from googleapiclient import discovery
 from requests import HTTPError
 
-def open_service():
-    SCOPES = [
-            "https://www.googleapis.com/auth/gmail.send"
-        ]
+def create_service():
+    SCOPES = [ "https://www.googleapis.com/auth/gmail.send" ]
     flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
     creds = flow.run_local_server(port=0)
 
-    service = build('gmail', 'v1', credentials=creds)
-
+    service = discovery.build('gmail', 'v1', credentials=creds)
     return service
 
+def save_session(service, data) -> None:
+    with open("session.pickle","wb") as save_file:
+        pickle.dump(service, save_file)
+        pickle.dump(data, save_file)
 
+def load_service():
+    try:
+        with open("session.pickle","rb") as load_file:
+            service = pickle.load(load_file)
+            data = pickle.load(load_file)
+            return service, data
+    except FileNotFoundError:
+        # if there is no stored service, just make a new one and return that
+        return create_service(), None
 """
 send email given an open OAuth service
 Also either provide a MIMEText message or the content, recipient and subject individually.
 return True if sent successfully. False otherwise.
 """
-def send_email(service, message = None, body = "", recipient = None, subject = ""):
+def send_email(service, message = None, body = "", recipient = None, subject = "") -> bool:
     if message == None:
         if recipient == None:
             print("no email recipient specified")
@@ -50,9 +62,11 @@ def send_email(service, message = None, body = "", recipient = None, subject = "
         return False
 
 def main():
-    service = open_service()
+    service, data = load_service()
 
     session_count = 0
+    if type(data) is int:
+        session_count = data
 
     session_active = True
     while session_active:
@@ -64,7 +78,6 @@ def main():
         if command[0] == 'h' or command[0] == 'H':
             print("commands: help email quit")
         elif command[0] == 'q' or command[0] == 'Q':
-            print("quitting...")
             session_active = False
         elif command[0] == 'e' or command[0] == 'E':
             session_count += 1
@@ -90,6 +103,9 @@ def main():
         else:
             print("That is not a valid command.")
             print("commands: help email quit")
+
+    save_session(service, session_count)
+    print("quitting...")
 
 
 if __name__ == "__main__":
