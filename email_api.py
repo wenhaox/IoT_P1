@@ -4,6 +4,12 @@ https://mailtrap.io/blog/python-send-email-gmail/
 
 Google Cloud Project
 https://console.cloud.google.com/apis/credentials?authuser=2&project=iotwio
+
+
+USAGE
+Load service (automatically creates a service if none found).
+
+
 """
 
 import datetime
@@ -15,6 +21,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient import discovery
 from requests import HTTPError
 
+"""
+Create OAuth service.
+Don't call directly- just call load_service
+"""
 def create_service():
     SCOPES = [ "https://www.googleapis.com/auth/gmail.send" ]
     flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
@@ -23,11 +33,19 @@ def create_service():
     service = discovery.build('gmail', 'v1', credentials=creds)
     return service
 
+"""
+Save OAuth service (and associated data).
+Load it later with load_service().
+"""
 def save_session(service, data) -> None:
     with open("session.pickle","wb") as save_file:
         pickle.dump(service, save_file)
         pickle.dump(data, save_file)
 
+"""
+Load OAuth service and associated data (any type)
+If no OAuth service found, create one
+"""
 def load_service():
     try:
         with open("session.pickle","rb") as load_file:
@@ -37,8 +55,9 @@ def load_service():
     except FileNotFoundError:
         # if there is no stored service, just make a new one and return that
         return create_service(), None
+
 """
-send email given an open OAuth service
+Send email given an open OAuth service
 Also either provide a MIMEText message or the content, recipient and subject individually.
 return True if sent successfully. False otherwise.
 """
@@ -106,7 +125,6 @@ def main():
 
     save_session(service, session_count)
     print("quitting...")
-
 
 if __name__ == "__main__":
     main()

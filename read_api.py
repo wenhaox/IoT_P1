@@ -1,7 +1,4 @@
-import requests
-import smtplib
 import ssl
-import time
 import urllib.request
 
 # Function to read the sensor data from the API 
