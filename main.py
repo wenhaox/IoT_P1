@@ -13,6 +13,11 @@ def main():
     
     service, data = load_service()
     try:
+        send_email(service, body="Your plant waterer is set up and running", recipient=EMAIL_REC, subject="WIO Plant Waterer (running)")
+    except:
+        service = create_service()
+
+    try:
         while True:
             time.sleep(5)
             response = read_sensor('https://cn.wio.seeed.io/v1/node/GroveMoistureA0/moisture?access_token=dd6c0019eb310b68c79dea774e6e1972')
